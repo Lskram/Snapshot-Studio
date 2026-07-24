@@ -453,7 +453,18 @@ def capture_frame():
     # Construct output filename
     base_name = os.path.splitext(os.path.basename(video_path))[0]
     time_str = f"{int(timestamp_sec // 3600):02d}_{int((timestamp_sec % 3600) // 60):02d}_{int(timestamp_sec % 60):02d}_{int((timestamp_sec * 1000) % 1000):03d}"
-    out_filename = f"{base_name}_frame_{time_str}.{img_format}"
+    
+    # Detail Enhancement naming suffix
+    enhancement = req.get('enhancement', 'none')
+    suffix = ""
+    if enhancement == 'cas':
+        suffix = "_อัปแล้ว_CAS"
+    elif enhancement == 'unsharp':
+        suffix = "_อัปแล้ว_Unsharp"
+    elif enhancement == 'super':
+        suffix = "_อัปแล้ว_Super"
+        
+    out_filename = f"{base_name}_frame_{time_str}{suffix}.{img_format}"
     out_path = os.path.normpath(os.path.join(output_dir, out_filename)).replace('\\', '/')
     
     # Combined Seeking: Fast input seek first, then precise decode seek
@@ -479,14 +490,13 @@ def capture_frame():
     else:
         width, height = int(req.get('video_width', 1920)), int(req.get('video_height', 1080))
         
-    # Detail Enhancement filters (CAS / Unsharp)
-    enhancement = req.get('enhancement', 'none')
+    # Detail Enhancement filters (Much stronger parameters so the difference is highly visible)
     if enhancement == 'cas':
-        filters.append('cas=strength=0.8')
+        filters.append('cas=strength=1.0')
     elif enhancement == 'unsharp':
-        filters.append('unsharp=5:5:1.0:5:5:0.0')
+        filters.append('unsharp=7:7:2.5:7:7:0.0')
     elif enhancement == 'super':
-        filters.append('cas=strength=0.6,unsharp=5:5:0.5:5:5:0.0')
+        filters.append('cas=strength=1.0,unsharp=5:5:1.5:5:5:0.0')
         
     if filters:
         cmd.extend(['-vf', ','.join(filters)])
