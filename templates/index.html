@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CapCut Frame Grabber & Importer</title>
+    <!-- Modern Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1.6">
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-icon">📸</span>
+                <div class="logo-text">
+                    <h1>CapCut Frame Grabber</h1>
+                    <p>Frame-Accurate Video Snapshot & Auto-Importer</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <div id="capcut-status-badge" class="status-badge checking">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Checking CapCut...</span>
+                </div>
+                <div class="header-controls">
+                    <button id="btn-launch-capcut" class="btn btn-primary btn-sm" onclick="launchCapCut()">
+                        🚀 Open CapCut
+                    </button>
+                    <button id="btn-kill-capcut" class="btn btn-danger btn-sm" onclick="killCapCut()">
+                        ⏹ Close CapCut
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="app-main">
+            <!-- LEFT CONTROL PANEL -->
+            <section class="panel-left glass-card">
+                <div class="card-section">
+                    <h2>1. Choose Media Source</h2>
+                    <div class="control-group">
+                        <label>Select Project</label>
+                        <select id="select-project" class="form-control">
+                            <option value="">-- Select Project --</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Select Source Video Timeline</label>
+                        <select id="select-timeline" class="form-control" disabled>
+                            <option value="">-- Choose project first --</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Select Video File</label>
+                        <select id="select-video" class="form-control" disabled>
+                            <option value="">-- Choose timeline first --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-section">
+                    <h2>2. Capture Settings</h2>
+                    <div class="control-group">
+                        <label>Saving Folder Path</label>
+                        <input type="text" id="input-output-dir" class="form-control" placeholder="Default: Pictures/CapCut_Snapshots">
+                    </div>
+                    <div class="control-group-grid">
+                        <div class="control-group">
+                            <label>Resolution</label>
+                            <select id="select-resolution" class="form-control">
+                                <option value="original">Original (Sharpest)</option>
+                                <option value="1080p">1920x1080 (1080p)</option>
+                                <option value="720p">1280x720 (720p)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Format</label>
+                            <select id="select-format" class="form-control">
+                                <option value="png">PNG (Lossless)</option>
+                                <option value="jpg">JPG (Smaller)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Detail Enhancement</label>
+                        <select id="select-enhancement" class="form-control">
+                            <option value="none">None (Original Quality)</option>
+                            <option value="cas" selected>CAS Sharpen (Adaptive - Recommended)</option>
+                            <option value="unsharp">Standard Sharpen (Unsharp Mask)</option>
+                            <option value="super">Super Sharpen (CAS + Unsharp)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Snapshot Shortcut Hotkey</label>
+                        <div class="hotkey-selector-row">
+                            <button id="btn-bind-hotkey" class="btn btn-secondary">Press key to bind</button>
+                            <span id="label-current-hotkey" class="hotkey-badge">S</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CENTER WORKSPACE (VIDEO PLAYER) -->
+            <section class="panel-center glass-card">
+                <div class="player-container">
+                    <div class="video-wrapper">
+                        <!-- Transcode Loading Overlay -->
+                        <div id="transcode-loading" class="transcode-loading-overlay" style="display: none;">
+                            <div class="transcode-spinner"></div>
+                            <p id="transcode-message">Preparing video for browser playback...</p>
+                        </div>
+                        
+                        <video id="video-player" playsinline>
+                            <source src="" type="video/mp4">
+                            Your browser does not support HTML5 video streaming.
+                        </video>
+                        <div id="player-overlay" class="player-overlay">
+                            <span class="overlay-icon">▶️</span>
+                        </div>
+                    </div>
+                    
+                    <!-- CUSTOM CONTROLS -->
+                    <div class="player-controls">
+                        <!-- Timeline scrubber -->
+                        <div class="scrubber-row">
+                            <input type="range" id="slider-seek" class="seek-bar" value="0" min="0" max="100" step="0.01" disabled>
+                        </div>
+                        
+                        <div class="controls-row">
+                            <div class="controls-left">
+                                <button id="btn-play-pause" class="ctrl-btn" title="Play/Pause (Space)" disabled>▶</button>
+                                <button id="btn-step-back" class="ctrl-btn" title="Step Back 1 Frame (Left Arrow)" disabled>◀| -1f</button>
+                                <button id="btn-step-forward" class="ctrl-btn" title="Step Forward 1 Frame (Right Arrow)" disabled>|▶ +1f</button>
+                                <div class="speed-selector">
+                                    <label>Speed</label>
+                                    <select id="select-speed" class="speed-control" disabled>
+                                        <option value="0.25">0.25x</option>
+                                        <option value="0.5">0.5x</option>
+                                        <option value="1" selected>1.0x</option>
+                                        <option value="1.5">1.5x</option>
+                                        <option value="2">2.0x</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="controls-center">
+                                <div id="timecode-display" class="timecode">00:00:00:00</div>
+                            </div>
+                            
+                            <div class="controls-right">
+                                <button id="btn-capture" class="btn btn-primary" disabled>
+                                    📸 Capture Frame
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL (SNAP GALLERY) -->
+            <section class="panel-right glass-card">
+                <div class="gallery-header">
+                    <h2>Captured Snapshots</h2>
+                    <div class="gallery-actions-row">
+                        <button id="btn-toggle-select" class="btn btn-secondary btn-xs">Select</button>
+                        <button id="btn-delete-selected" class="btn btn-danger btn-xs" style="display: none;">Delete</button>
+                        <span id="gallery-count" class="count-badge">0</span>
+                    </div>
+                </div>
+                <div id="snapshot-gallery" class="snapshot-gallery">
+                    <div class="empty-state">No snapshots captured yet. Press the hotkey to save frames.</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- STORYBOARD ALIGNMENT EDITOR -->
+        <section class="app-storyboard glass-card">
+            <div class="storyboard-header">
+                <div class="storyboard-title-area">
+                    <span class="storyboard-logo-icon">🎬</span>
+                    <div>
+                        <h2>Storyboard Editor (Align Images to Voice)</h2>
+                        <p>Place captured frames directly onto voice/audio segments from this website</p>
+                    </div>
+                </div>
+                <div class="storyboard-controls">
+                    <div class="target-select-row">
+                        <label for="select-storyboard-timeline">Target Timeline:</label>
+                        <select id="select-storyboard-timeline" class="form-control" style="width: 250px;" disabled>
+                            <option value="">-- Choose project first --</option>
+                        </select>
+                    </div>
+                    <button id="btn-reload-storyboard" class="btn btn-secondary btn-sm" disabled>
+                        🔄 Refresh Storyboard
+                    </button>
+                </div>
+            </div>
+            <div id="storyboard-timeline" class="storyboard-timeline">
+                <div class="empty-state">Select a project and a target timeline above to load the voice storyboard.</div>
+            </div>
+        </section>
+
+        <!-- TERMINAL CONSOLE LOGS -->
+        <footer class="app-console glass-card">
+            <div class="console-header">
+                <h2>Output Console</h2>
+                <button class="btn-clear" onclick="clearConsole()">Clear Logs</button>
+            </div>
+            <div class="console-body">
+                <pre id="console-output" class="console-pre">> Standing by. Select a project to begin.</pre>
+            </div>
+        </footer>
+    </div>
+
+    <!-- FULLSCREEN MODAL PREVIEW -->
+    <div id="preview-modal" class="modal">
+        <span class="modal-close" onclick="closePreview()">&times;</span>
+        <img class="modal-content" id="img-modal-preview" alt="Snapshot Preview">
+        <div id="modal-caption" class="modal-caption"></div>
+    </div>
+
+    <script src="/static/js/app.js?v=1.6"></script>
+</body>
+</html>
