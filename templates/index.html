@@ -6,7 +6,7 @@
     <title>CapCut Frame Grabber & Importer</title>
     <!-- Modern Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css?v=1.6">
+    <link rel="stylesheet" href="/static/css/style.css?v=1.7">
 </head>
 <body>
     <div class="app-container">
@@ -198,6 +198,13 @@
                     </button>
                 </div>
             </div>
+            <!-- SELECTION BAR (HIDDEN BY DEFAULT) -->
+            <div id="storyboard-selection-bar" class="storyboard-selection-bar" style="display: none;">
+                <span id="storyboard-selection-info">Selected: 0 clips (0.00s)</span>
+                <div class="selection-actions">
+                    <button class="btn btn-secondary btn-xs" onclick="clearStoryboardSelection()">Clear Selection</button>
+                </div>
+            </div>
             <div id="storyboard-timeline" class="storyboard-timeline">
                 <div class="empty-state">Select a project and a target timeline above to load the voice storyboard.</div>
             </div>
@@ -222,6 +229,6 @@
         <div id="modal-caption" class="modal-caption"></div>
     </div>
 
-    <script src="/static/js/app.js?v=1.6"></script>
+    <script src="/static/js/app.js?v=1.7"></script>
 </body>
 </html>

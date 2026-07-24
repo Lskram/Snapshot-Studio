@@ -637,6 +637,43 @@ body {
     color: var(--text-secondary);
 }
 
+.storyboard-selection-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(157, 78, 221, 0.06);
+    border: 1px solid rgba(157, 78, 221, 0.15);
+    padding: 8px 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+#storyboard-selection-info {
+    font-weight: 600;
+}
+
+.selection-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.storyboard-checkbox-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 10px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.storyboard-row-checkbox {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: var(--accent-purple);
+}
+
 .storyboard-timeline {
     max-height: 480px;
     overflow-y: auto;

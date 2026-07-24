@@ -862,7 +862,14 @@ function renderStoryboard(storyboard) {
             </button>
         `;
         
+        const checkboxHtml = `
+            <div class="storyboard-checkbox-col">
+                <input type="checkbox" class="storyboard-row-checkbox" data-start="${row.start}" data-end="${row.start + row.duration}" onclick="handleCheckboxClick(event)">
+            </div>
+        `;
+        
         rowDiv.innerHTML = `
+            ${checkboxHtml}
             <div class="storyboard-time">
                 <div>${timeStr}</div>
                 <div style="margin-top: 8px;">
@@ -933,7 +940,20 @@ async function assignDraggedImageToStoryboard(startSec, durationSec, dragData) {
         return;
     }
     
-    appendLog(`Placing dragged image "${dragData.filename}" on video timeline at ${startSec}s...`);
+    // Check if there are checked checkboxes in the storyboard
+    const checkedCheckboxes = Array.from(document.querySelectorAll('.storyboard-row-checkbox:checked'));
+    let finalStart = startSec;
+    let finalDuration = durationSec;
+    
+    if (checkedCheckboxes.length > 0) {
+        const starts = checkedCheckboxes.map(cb => parseFloat(cb.dataset.start));
+        const ends = checkedCheckboxes.map(cb => parseFloat(cb.dataset.end));
+        finalStart = Math.min(...starts);
+        const finalEnd = Math.max(...ends);
+        finalDuration = finalEnd - finalStart;
+    }
+    
+    appendLog(`Placing image "${dragData.filename}" on video timeline spanning ${finalStart.toFixed(2)}s to ${ (finalStart + finalDuration).toFixed(2) }s...`);
     
     try {
         const response = await fetch(`/api/projects/${selectedProject.folder_name}/timelines/${selectedStoryboardTimeline.uuid}/storyboard/assign`, {
@@ -942,14 +962,17 @@ async function assignDraggedImageToStoryboard(startSec, durationSec, dragData) {
             body: JSON.stringify({
                 image_path: dragData.path,
                 image_material_id: dragData.material_id,
-                start_sec: startSec,
-                duration_sec: durationSec
+                start_sec: finalStart,
+                duration_sec: finalDuration
             })
         });
         const data = await response.json();
         
         if (data.success) {
-            appendLog(`Success: Dragged image placed on timeline.`);
+            appendLog(`Success: Placed image on timeline.`);
+            // Uncheck all after successful assign
+            checkedCheckboxes.forEach(cb => cb.checked = false);
+            updateStoryboardSelectionHeader();
             loadStoryboard();
         } else {
             appendLog(`Placement failed: ${data.error}`, true);
@@ -964,37 +987,7 @@ async function assignImageToStoryboard(startSec, durationSec) {
         alert("Please select a captured snapshot from the right 'Captured Snapshots' list first! (Or simply DRAG the card and DROP it onto the row!)");
         return;
     }
-    
-    await checkCapCutStatus();
-    if (capcutStatusBadge.classList.contains('running')) {
-        alert("CapCut is currently running! Please close CapCut to allow modifying the timeline.");
-        return;
-    }
-    
-    appendLog(`Placing "${selectedGalleryImage.filename}" on video timeline at ${startSec}s...`);
-    
-    try {
-        const response = await fetch(`/api/projects/${selectedProject.folder_name}/timelines/${selectedStoryboardTimeline.uuid}/storyboard/assign`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                image_path: selectedGalleryImage.path,
-                image_material_id: selectedGalleryImage.material_id,
-                start_sec: startSec,
-                duration_sec: durationSec
-            })
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-            appendLog(`Success: Placed image on timeline.`);
-            loadStoryboard();
-        } else {
-            appendLog(`Placement failed: ${data.error}`, true);
-        }
-    } catch (e) {
-        appendLog(`Error placing image: ${e.message}`, true);
-    }
+    await assignDraggedImageToStoryboard(startSec, durationSec, selectedGalleryImage);
 }
 
 async function removeStoryboardPlacement(segmentId) {
@@ -1228,6 +1221,56 @@ function clearConsole() {
     consoleOutput.innerHTML = `> Console cleared. Ready.`;
 }
 
+// --- Storyboard Selection Helpers ---
+let lastCheckedCheckbox = null;
+
+function handleCheckboxClick(e) {
+    const checkboxes = Array.from(document.querySelectorAll('.storyboard-row-checkbox'));
+    const currentCheckbox = e.target;
+    
+    if (e.shiftKey && lastCheckedCheckbox) {
+        let startIdx = checkboxes.indexOf(lastCheckedCheckbox);
+        let endIdx = checkboxes.indexOf(currentCheckbox);
+        
+        let [minIdx, maxIdx] = [startIdx, endIdx].sort((a, b) => a - b);
+        
+        for (let i = minIdx; i <= maxIdx; i++) {
+            checkboxes[i].checked = lastCheckedCheckbox.checked;
+        }
+    }
+    
+    lastCheckedCheckbox = currentCheckbox;
+    updateStoryboardSelectionHeader();
+}
+
+function updateStoryboardSelectionHeader() {
+    const checkedCheckboxes = Array.from(document.querySelectorAll('.storyboard-row-checkbox:checked'));
+    const bar = document.getElementById('storyboard-selection-bar');
+    const info = document.getElementById('storyboard-selection-info');
+    
+    if (checkedCheckboxes.length > 0) {
+        const starts = checkedCheckboxes.map(cb => parseFloat(cb.dataset.start));
+        const ends = checkedCheckboxes.map(cb => parseFloat(cb.dataset.end));
+        const minStart = Math.min(...starts);
+        const maxEnd = Math.max(...ends);
+        const duration = maxEnd - minStart;
+        
+        info.textContent = `Selected: ${checkedCheckboxes.length} segments (Range: ${minStart.toFixed(2)}s to ${maxEnd.toFixed(2)}s, Total Duration: ${duration.toFixed(2)}s)`;
+        bar.style.display = 'flex';
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+function clearStoryboardSelection() {
+    const checkboxes = document.querySelectorAll('.storyboard-row-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    lastCheckedCheckbox = null;
+    updateStoryboardSelectionHeader();
+}
+
 // Export functions to global scope for HTML onclick bindings
 window.launchCapCut = launchCapCut;
 window.killCapCut = killCapCut;
+window.clearStoryboardSelection = clearStoryboardSelection;
+window.handleCheckboxClick = handleCheckboxClick;

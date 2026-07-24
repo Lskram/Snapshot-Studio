@@ -850,8 +850,12 @@ def storyboard_assign_image(name, timeline_uuid):
             
         video_segments = video_track.setdefault('segments', [])
         
-        end_us = start_us + duration_us
-        video_segments = [v for v in video_segments if not (v['target_timerange']['start'] >= start_us and v['target_timerange']['start'] < end_us)]
+        # Keep only segments that do not overlap with the new range [start_us, end_us)
+        video_segments = [
+            v for v in video_segments 
+            if (v['target_timerange']['start'] + v['target_timerange']['duration'] <= start_us or 
+                v['target_timerange']['start'] >= end_us)
+        ]
         video_track['segments'] = video_segments
         
         new_segment = {
