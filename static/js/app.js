@@ -765,7 +765,12 @@ async function onStoryboardTimelineChange(e) {
 async function loadStoryboard() {
     if (!selectedProject || !selectedStoryboardTimeline) return;
     
-    storyboardTimeline.innerHTML = '<div class="loading-state">Loading voice storyboard timeline...</div>';
+    const savedScrollTop = storyboardTimeline.scrollTop;
+    
+    // Only show loading if empty
+    if (storyboardTimeline.children.length === 0 || storyboardTimeline.querySelector('.empty-state')) {
+        storyboardTimeline.innerHTML = '<div class="loading-state">Loading voice storyboard timeline...</div>';
+    }
     
     if (currentPlayingAudio) {
         currentPlayingAudio.pause();
@@ -785,6 +790,9 @@ async function loadStoryboard() {
         
         const storyboard = data.storyboard || [];
         renderStoryboard(storyboard);
+        
+        // Restore scroll position
+        storyboardTimeline.scrollTop = savedScrollTop;
     } catch (e) {
         appendLog(`Error loading storyboard: ${e.message}`, true);
         storyboardTimeline.innerHTML = `<div class="empty-state">Network error loading storyboard: ${e.message}</div>`;
@@ -801,6 +809,18 @@ function renderStoryboard(storyboard) {
     storyboard.forEach((row, idx) => {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'storyboard-row';
+        
+        // CLICK TO TOGGLE SELECTION (EXCLUDING INTERACTIVE BUTTONS)
+        rowDiv.addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('input[type="checkbox"]') || e.target.closest('.placed-thumb-wrapper')) {
+                return;
+            }
+            const cb = rowDiv.querySelector('.storyboard-row-checkbox');
+            if (cb) {
+                cb.checked = !cb.checked;
+                handleCheckboxClick({ target: cb, shiftKey: e.shiftKey });
+            }
+        });
         
         // DRAG AND DROP TARGET EVENTS
         rowDiv.addEventListener('dragover', (e) => {
@@ -1245,8 +1265,21 @@ function handleCheckboxClick(e) {
 }
 
 function updateStoryboardSelectionHeader() {
-    const checkedCheckboxes = Array.from(document.querySelectorAll('.storyboard-row-checkbox:checked'));
+    const checkboxes = Array.from(document.querySelectorAll('.storyboard-row-checkbox'));
+    const checkedCheckboxes = checkboxes.filter(cb => cb.checked);
     const info = document.getElementById('storyboard-selection-info');
+    
+    // Toggle selected class on storyboard rows
+    checkboxes.forEach(cb => {
+        const row = cb.closest('.storyboard-row');
+        if (row) {
+            if (cb.checked) {
+                row.classList.add('selected');
+            } else {
+                row.classList.remove('selected');
+            }
+        }
+    });
     
     if (checkedCheckboxes.length > 0) {
         const starts = checkedCheckboxes.map(cb => parseFloat(cb.dataset.start));

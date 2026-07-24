@@ -723,6 +723,11 @@ body {
     border-color: rgba(255, 255, 255, 0.06);
 }
 
+.storyboard-row.selected {
+    background: rgba(157, 78, 221, 0.08) !important;
+    border-color: rgba(157, 78, 221, 0.3) !important;
+}
+
 /* Drag Over Dropzone State */
 .storyboard-row.drag-over {
     border: 2px dashed var(--accent-purple) !important;
