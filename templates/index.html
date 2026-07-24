@@ -35,8 +35,8 @@
             </div>
         </header>
 
-        <!-- MAIN LAYOUT -->
-        <main class="app-main">
+        <!-- UPPER LAYOUT (MEDIA SELECT & VIDEO PLAYER) -->
+        <div class="upper-layout">
             <!-- LEFT CONTROL PANEL -->
             <section class="panel-left glass-card">
                 <div class="card-section">
@@ -159,6 +159,52 @@
                     </div>
                 </div>
             </section>
+        </div>
+
+        <!-- LOWER LAYOUT (STORYBOARD EDITOR & SNAP GALLERY SIDE-BY-SIDE) -->
+        <div class="lower-layout">
+            <!-- STORYBOARD ALIGNMENT EDITOR -->
+            <section class="app-storyboard glass-card">
+                <div class="storyboard-header">
+                    <div class="storyboard-title-area">
+                        <span class="storyboard-logo-icon">🎬</span>
+                        <div>
+                            <h2>Storyboard Editor (Align Images to Voice)</h2>
+                            <p>Place captured frames directly onto voice/audio segments from this website</p>
+                        </div>
+                    </div>
+                    <div class="storyboard-controls">
+                        <div class="target-select-row">
+                            <label for="select-storyboard-timeline">Target Timeline:</label>
+                            <select id="select-storyboard-timeline" class="form-control" style="width: 200px;" disabled>
+                                <option value="">-- Choose project first --</option>
+                            </select>
+                        </div>
+                        <button id="btn-reload-storyboard" class="btn btn-secondary btn-sm" disabled>
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SELECTION BAR (ALWAYS VISIBLE HEADER) -->
+                <div id="storyboard-selection-bar" class="storyboard-selection-bar">
+                    <span id="storyboard-selection-info">No segments selected (Use checkboxes or Range select below)</span>
+                    <div class="selection-actions">
+                        <div class="range-select-container">
+                            <span>Range Selection: #</span>
+                            <input type="number" id="input-range-start" min="1" placeholder="Start" class="form-control range-input" style="width: 70px; display: inline-block; padding: 2px 6px; height: 26px; font-size: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px;">
+                            <span>to</span>
+                            <input type="number" id="input-range-end" min="1" placeholder="End" class="form-control range-input" style="width: 70px; display: inline-block; padding: 2px 6px; height: 26px; font-size: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px;">
+                            <button class="btn btn-secondary btn-xs" onclick="selectRangeByIndices()">Select</button>
+                        </div>
+                        <button class="btn btn-secondary btn-xs" onclick="clearStoryboardSelection()">Clear</button>
+                    </div>
+                </div>
+
+                <div id="storyboard-timeline" class="storyboard-timeline">
+                    <div class="empty-state">Select a project and a target timeline above to load the voice storyboard.</div>
+                </div>
+            </section>
 
             <!-- RIGHT PANEL (SNAP GALLERY) -->
             <section class="panel-right glass-card">
@@ -174,41 +220,7 @@
                     <div class="empty-state">No snapshots captured yet. Press the hotkey to save frames.</div>
                 </div>
             </section>
-        </main>
-
-        <!-- STORYBOARD ALIGNMENT EDITOR -->
-        <section class="app-storyboard glass-card">
-            <div class="storyboard-header">
-                <div class="storyboard-title-area">
-                    <span class="storyboard-logo-icon">🎬</span>
-                    <div>
-                        <h2>Storyboard Editor (Align Images to Voice)</h2>
-                        <p>Place captured frames directly onto voice/audio segments from this website</p>
-                    </div>
-                </div>
-                <div class="storyboard-controls">
-                    <div class="target-select-row">
-                        <label for="select-storyboard-timeline">Target Timeline:</label>
-                        <select id="select-storyboard-timeline" class="form-control" style="width: 250px;" disabled>
-                            <option value="">-- Choose project first --</option>
-                        </select>
-                    </div>
-                    <button id="btn-reload-storyboard" class="btn btn-secondary btn-sm" disabled>
-                        🔄 Refresh Storyboard
-                    </button>
-                </div>
-            </div>
-            <!-- SELECTION BAR (HIDDEN BY DEFAULT) -->
-            <div id="storyboard-selection-bar" class="storyboard-selection-bar" style="display: none;">
-                <span id="storyboard-selection-info">Selected: 0 clips (0.00s)</span>
-                <div class="selection-actions">
-                    <button class="btn btn-secondary btn-xs" onclick="clearStoryboardSelection()">Clear Selection</button>
-                </div>
-            </div>
-            <div id="storyboard-timeline" class="storyboard-timeline">
-                <div class="empty-state">Select a project and a target timeline above to load the voice storyboard.</div>
-            </div>
-        </section>
+        </div>
 
         <!-- TERMINAL CONSOLE LOGS -->
         <footer class="app-console glass-card">

@@ -91,12 +91,17 @@ body {
     gap: 10px;
 }
 
-/* MAIN LAYOUT */
-.app-main {
+/* LAYOUT SECTIONS */
+.upper-layout {
     display: grid;
-    grid-template-columns: 320px 1fr 340px;
+    grid-template-columns: 320px 1fr;
     gap: 20px;
-    min-height: 520px;
+}
+
+.lower-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
 }
 
 .glass-card {
@@ -481,7 +486,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    max-height: 440px;
+    height: 520px;
+    max-height: 520px;
     padding-right: 5px;
 }
 
@@ -641,8 +647,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(157, 78, 221, 0.06);
-    border: 1px solid rgba(157, 78, 221, 0.15);
+    background: rgba(157, 78, 221, 0.08);
+    border: 1px solid rgba(157, 78, 221, 0.2);
     padding: 8px 15px;
     border-radius: 8px;
     margin-bottom: 12px;
@@ -656,7 +662,23 @@ body {
 
 .selection-actions {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
+}
+
+.range-select-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.range-select-container span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
 }
 
 .storyboard-checkbox-col {
@@ -675,7 +697,8 @@ body {
 }
 
 .storyboard-timeline {
-    max-height: 480px;
+    height: 520px;
+    max-height: 520px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;

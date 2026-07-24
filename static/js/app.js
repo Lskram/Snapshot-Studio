@@ -798,7 +798,7 @@ function renderStoryboard(storyboard) {
     }
     
     storyboardTimeline.innerHTML = '';
-    storyboard.forEach(row => {
+    storyboard.forEach((row, idx) => {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'storyboard-row';
         
@@ -863,7 +863,8 @@ function renderStoryboard(storyboard) {
         `;
         
         const checkboxHtml = `
-            <div class="storyboard-checkbox-col">
+            <div class="storyboard-checkbox-col" style="flex-direction: column; gap: 4px; min-width: 45px;">
+                <span style="font-size: 0.8rem; font-weight: 800; color: var(--accent-purple); margin-bottom: 2px;">#${idx + 1}</span>
                 <input type="checkbox" class="storyboard-row-checkbox" data-start="${row.start}" data-end="${row.start + row.duration}" onclick="handleCheckboxClick(event)">
             </div>
         `;
@@ -1245,7 +1246,6 @@ function handleCheckboxClick(e) {
 
 function updateStoryboardSelectionHeader() {
     const checkedCheckboxes = Array.from(document.querySelectorAll('.storyboard-row-checkbox:checked'));
-    const bar = document.getElementById('storyboard-selection-bar');
     const info = document.getElementById('storyboard-selection-info');
     
     if (checkedCheckboxes.length > 0) {
@@ -1256,9 +1256,8 @@ function updateStoryboardSelectionHeader() {
         const duration = maxEnd - minStart;
         
         info.textContent = `Selected: ${checkedCheckboxes.length} segments (Range: ${minStart.toFixed(2)}s to ${maxEnd.toFixed(2)}s, Total Duration: ${duration.toFixed(2)}s)`;
-        bar.style.display = 'flex';
     } else {
-        bar.style.display = 'none';
+        info.textContent = `No segments selected (Use checkboxes or Range selection)`;
     }
 }
 
@@ -1269,8 +1268,34 @@ function clearStoryboardSelection() {
     updateStoryboardSelectionHeader();
 }
 
+function selectRangeByIndices() {
+    const startInput = document.getElementById('input-range-start');
+    const endInput = document.getElementById('input-range-end');
+    
+    const startIdx = parseInt(startInput.value);
+    const endIdx = parseInt(endInput.value);
+    
+    if (isNaN(startIdx) || isNaN(endIdx)) {
+        alert("Please enter both Start and End sequence numbers (e.g. 1 to 5).");
+        return;
+    }
+    
+    const checkboxes = Array.from(document.querySelectorAll('.storyboard-row-checkbox'));
+    if (checkboxes.length === 0) return;
+    
+    const [min, max] = [startIdx, endIdx].sort((a, b) => a - b);
+    
+    checkboxes.forEach((cb, idx) => {
+        const num = idx + 1;
+        cb.checked = (num >= min && num <= max);
+    });
+    
+    updateStoryboardSelectionHeader();
+}
+
 // Export functions to global scope for HTML onclick bindings
 window.launchCapCut = launchCapCut;
 window.killCapCut = killCapCut;
 window.clearStoryboardSelection = clearStoryboardSelection;
 window.handleCheckboxClick = handleCheckboxClick;
+window.selectRangeByIndices = selectRangeByIndices;
