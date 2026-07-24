@@ -52,6 +52,7 @@ const btnDeleteSelected = document.getElementById('btn-delete-selected');
 const consoleOutput = document.getElementById('console-output');
 
 const storyboardTimeline = document.getElementById('storyboard-timeline');
+const fineScrubRuler = document.getElementById('fine-scrub-ruler');
 
 // Modal Elements
 const previewModal = document.getElementById('preview-modal');
@@ -154,6 +155,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     btnCapture.addEventListener('click', triggerCapture);
+
+    // Fine-Scrub Ruler Drag listeners
+    let isDraggingFineScrub = false;
+    let startX = 0;
+    let lastVideoTime = 0;
+    let fineScrubPosition = 0;
+    
+    if (fineScrubRuler) {
+        const fineScrubTrack = fineScrubRuler.querySelector('.fine-scrub-track');
+        
+        fineScrubRuler.addEventListener('mousedown', (e) => {
+            if (!videoPlayer.src || !videoPlayer.duration) return;
+            isDraggingFineScrub = true;
+            startX = e.clientX;
+            lastVideoTime = videoPlayer.currentTime;
+            fineScrubRuler.style.background = 'rgba(157, 78, 221, 0.12)';
+            videoPlayer.pause();
+            if (btnPlayPause) btnPlayPause.textContent = '▶';
+        });
+        
+        window.addEventListener('mousemove', (e) => {
+            if (!isDraggingFineScrub) return;
+            
+            const deltaX = e.clientX - startX;
+            // Sensitivity: 8 pixels of drag = 1 frame (~0.0333s)
+            const secondsPerPixel = (1.0 / 30.0) / 8.0;
+            let newTime = lastVideoTime + (deltaX * secondsPerPixel);
+            newTime = Math.max(0, Math.min(videoPlayer.duration, newTime));
+            
+            videoPlayer.currentTime = newTime;
+            
+            // Slide background animation
+            fineScrubPosition = deltaX;
+            if (fineScrubTrack) {
+                fineScrubTrack.style.backgroundPositionX = `${fineScrubPosition}px`;
+            }
+        });
+        
+        window.addEventListener('mouseup', () => {
+            if (isDraggingFineScrub) {
+                isDraggingFineScrub = false;
+                fineScrubRuler.style.background = 'rgba(0, 0, 0, 0.4)';
+                if (fineScrubTrack) {
+                    fineScrubTrack.style.backgroundPositionX = '0px';
+                }
+            }
+        });
+    }
 });
 
 // --- Workspace State Persistence ---
@@ -1124,6 +1173,28 @@ function handleGlobalKeydown(e) {
         e.preventDefault();
         e.stopPropagation();
         seekSmoothly(-2.0);
+        return;
+    }
+
+    // ARROW UP: Precise Frame Step Forward (+1 frame = ~0.033s)
+    if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (videoPlayer.src && videoPlayer.duration) {
+            videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + (1.0 / 30.0));
+            updateTimecode(videoPlayer.currentTime);
+        }
+        return;
+    }
+
+    // ARROW DOWN: Precise Frame Step Backward (-1 frame = ~0.033s)
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (videoPlayer.src && videoPlayer.duration) {
+            videoPlayer.currentTime = Math.max(0.0, videoPlayer.currentTime - (1.0 / 30.0));
+            updateTimecode(videoPlayer.currentTime);
+        }
         return;
     }
 
